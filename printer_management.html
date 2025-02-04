@@ -177,7 +177,8 @@
     </div>
 
     <script>
-        let printers = JSON.parse(localStorage.getItem('printers')) || [];
+        let clientAccount = new URLSearchParams(window.location.search).get('account');
+let printers = JSON.parse(localStorage.getItem(`printers_${clientAccount}`)) || [];
         let currentPrinterIndex = null;
 
         function openPrinterModal() {
