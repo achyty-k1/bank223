@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список клиентов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1a1a, #333);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 80%;
+            max-width: 1000px;
+            background: #252525;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+        .client-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .client-card {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        .client-card h3 {
+            margin: 10px 0;
+            color: #4caf50;
+        }
+        .client-card p {
+            margin: 5px 0;
+        }
+        .client-card button {
+            margin-top: 10px;
+            padding: 12px;
+            width: 48%;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            font-size: 16px;
+        }
+        .client-card button:hover {
+            transform: scale(1.05);
+        }
+        .interact-btn {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+            color: white;
+        }
+        .delete-btn {
+            background: linear-gradient(135deg, #f44336, #c62828);
+            color: white;
+        }
+        .delete-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+        .delete-modal button {
+            margin: 15px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .confirm-delete {
+            background: #f44336;
+            color: white;
+        }
+        .cancel-delete {
+            background: #4caf50;
+            color: white;
+        }
+        .loading-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .loading-screen img {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Список клиентов</h1>
+        <div class="client-grid" id="client-list"></div>
+    </div>
+        <button class="back-button" onclick="window.location.href='workspace.html'">Назад</button>
+        <div class="loading-screen" id="loading-screen">
+        <img src="Animation - 1738343878366.gif" alt="Загрузка...">
+        <p>Страница загружается...</p>
+    </div>
+    
+    <div class="delete-modal" id="delete-modal">
+        <p id="delete-message"></p>
+        <button class="confirm-delete" onclick="confirmDelete()">Удалить</button>
+        <button class="cancel-delete" onclick="closeDeleteModal()">Отмена</button>
+    </div>
+    
+    <script>
+        let clients = JSON.parse(localStorage.getItem('clients')) || [];
+        let deleteIndex = null;
+        const clientList = document.getElementById('client-list');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteMessage = document.getElementById('delete-message');
+        
+        function renderClients() {
+            clientList.innerHTML = '';
+            if (clients.length === 0) {
+                clientList.innerHTML = '<p>Клиентов пока нет</p>';
+                return;
+            }
+            clients.forEach((client, index) => {
+                const clientCard = document.createElement('div');
+                clientCard.classList.add('client-card');
+                clientCard.innerHTML = `
+                    <h3>${client.name}</h3>
+                    <p>Номер счёта: ${client.accountNumber}</p>
+                    <button class="interact-btn" onclick="interactClient('${client.accountNumber}')">Взаимодействовать</button>
+                    <button class="delete-btn" onclick="openDeleteModal(${index})">Удалить</button>
+                `;
+                clientList.appendChild(clientCard);
+            });
+        }
+        
+        function openDeleteModal(index) {
+            deleteIndex = index;
+            deleteMessage.textContent = `Вы уверены, что хотите удалить клиента ${clients[index].name}?`;
+            deleteModal.style.display = 'block';
+        }
+        
+        function closeDeleteModal() {
+            deleteModal.style.display = 'none';
+        }
+        
+        function confirmDelete() {
+            if (deleteIndex !== null) {
+                clients.splice(deleteIndex, 1);
+                localStorage.setItem('clients', JSON.stringify(clients));
+                renderClients();
+                closeDeleteModal();
+            }
+        }
+        
+        function interactClient(accountNumber) {
+            document.getElementById('loading-screen').style.display = 'flex';
+            setTimeout(() => {
+                window.location.href = 'client_interaction.html?account=' + accountNumber;
+            }, 3000);
+        }
+        
+        renderClients();
+    </script>
+</body>
+</html>

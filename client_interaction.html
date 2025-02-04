@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Взаимодействие с клиентом</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1e1e1e, #252525);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            padding-top: 50px; /* Добавляем отступ сверху */
+        }
+        .container {
+            display: flex;
+            width: 80%;
+            max-width: 1000px;
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .left-column, .right-column {
+            flex: 1;
+            padding: 20px;
+        }
+        .left-column {
+            border-right: 2px solid #444;
+            background: linear-gradient(135deg, #333, #444);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+        }
+        .left-column h2 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #4caf50;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        .left-column p {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #ddd;
+            border-bottom: 1px solid #555;
+            padding-bottom: 8px;
+        }
+        .balance-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #3a3a3a;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        .balance-section h3 {
+            color: #4caf50;
+            margin-bottom: 15px;
+        }
+        .input-group {
+            margin-top: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 14px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #3a3a3a;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .input-group button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .input-group button:hover {
+            transform: scale(1.05);
+            background: #3d8b3f;
+        }
+        .right-column button {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .right-column button:hover {
+            transform: scale(1.05);
+            background: #3d8b3f;
+        }
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .back-button:hover {
+            background: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-column">
+            <h2 id="client-name">Клиент</h2>
+            <p>Кредитов: <span id="credit-count">0</span></p>
+            <p>Основной баланс: <span id="main-balance">0 ₽</span></p>
+            <p>Баланс принтеров: <span id="printer-balance">0 ₽</span></p>
+            <p>Депозитов: <span id="deposit-count">0</span></p>
+        </div>
+        <div class="right-column">
+            <div class="balance-section">
+                <h3>Изменение балансов</h3>
+                <div class="input-group">
+                    <label for="main-balance-input">Основной баланс</label>
+                    <input type="number" id="main-balance-input" placeholder="Введите сумму для пополнения">
+                    <button onclick="updateMainBalance()">Пополнить</button>
+                    <input type="number" id="main-balance-deduct-input" placeholder="Введите сумму для списания">
+                    <button onclick="deductMainBalance()">Списать</button>
+                </div>
+                <div class="input-group">
+                    <label for="printer-balance-input">Баланс принтеров</label>
+                    <input type="number" id="printer-balance-input" placeholder="Введите сумму для пополнения">
+                    <label for="commission-input">Комиссия</label>
+                    <input type="number" id="commission-input" placeholder="Введите комиссию">
+                    <button onclick="updatePrinterBalance()">Пополнить</button>
+                    <input type="number" id="printer-balance-deduct-input" placeholder="Введите сумму для списания">
+                    <button onclick="deductPrinterBalance()">Списать</button>
+                </div>
+            </div>
+            <button onclick="window.location.href='add_credit.html'">Добавить кредит</button>
+            <button onclick="window.location.href='add_deposit.html'">Добавить депозит</button>
+            <button onclick="window.location.href='printer_management.html'">Управление принтерами</button>
+        </div>
+    </div>
+    <button class="back-button" onclick="window.location.href='client_list.html'">Назад</button>
+    <script>
+        let clientAccount = new URLSearchParams(window.location.search).get('account');
+        let clientData = JSON.parse(localStorage.getItem(`client_${clientAccount}`)) || { mainBalance: 0, printerBalance: 0, credits: 0, deposits: 0, storedPrinters: 0 };
+
+        function saveClientData() {
+            localStorage.setItem(`client_${clientAccount}`, JSON.stringify(clientData));
+        }
+
+        function updateUI() {
+            document.getElementById('credit-count').textContent = clientData.credits;
+            document.getElementById('main-balance').textContent = `${clientData.mainBalance} ₽`;
+            document.getElementById('printer-balance').textContent = `${clientData.printerBalance} ₽`;
+            document.getElementById('deposit-count').textContent = clientData.deposits;
+        }
+
+        function updateMainBalance() {
+            let amount = parseFloat(document.getElementById('main-balance-input').value);
+            if (!amount || amount <= 0) return alert('Некорректная сумма!');
+            clientData.mainBalance += amount;
+            saveClientData();
+            updateUI();
+        }
+
+        function deductMainBalance() {
+            let amount = parseFloat(document.getElementById('main-balance-deduct-input').value);
+            if (!amount || amount <= 0 || amount > clientData.mainBalance) return alert('Некорректная сумма!');
+            clientData.mainBalance -= amount;
+            saveClientData();
+            updateUI();
+        }
+
+        function updatePrinterBalance() {
+            let amount = parseFloat(document.getElementById('printer-balance-input').value);
+            let commission = parseFloat(document.getElementById('commission-input').value);
+            if (!amount || amount <= 0 || !commission || commission < 0) return alert('Некорректные значения!');
+            clientData.printerBalance += amount - commission;
+            saveClientData();
+            updateUI();
+        }
+
+        function deductPrinterBalance() {
+            let amount = parseFloat(document.getElementById('printer-balance-deduct-input').value);
+            if (!amount || amount <= 0 || amount > clientData.printerBalance) return alert('Некорректная сумма!');
+            clientData.printerBalance -= amount;
+            saveClientData();
+            updateUI();
+        }
+
+        function syncData() {
+            // Example sync logic to connect with other menus
+            const globalData = JSON.parse(localStorage.getItem('globalData')) || {};
+            globalData[clientAccount] = clientData;
+            localStorage.setItem('globalData', JSON.stringify(globalData));
+        }
+
+        updateUI();
+        syncData();
+    </script>
+</body>
+</html>

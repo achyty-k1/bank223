@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление клиента</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1a1a, #333);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .container {
+            background: linear-gradient(135deg, #252525, #1e1e1e);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            width: 420px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .container h1 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: #4caf50;
+        }
+        .container input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 10px;
+            background: #3a3a3a;
+            color: #fff;
+            font-size: 17px;
+            transition: background 0.3s ease-in-out;
+        }
+        .container input:focus {
+            background: #444;
+            outline: none;
+        }
+        .container button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .container button:hover {
+            transform: scale(1.08);
+            background: #3d8b3f;
+        }
+        .nav-buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .nav-buttons button {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #f44336, #c62828);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+        }
+        .nav-buttons button:hover {
+            transform: scale(1.08);
+            background: #d32f2f;
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #323232;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: none;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Добавление клиента</h1>
+        <input type="text" id="client-name" placeholder="Имя клиента">
+        <input type="text" id="account-number" placeholder="Номер счёта (если не заполнить, сгенерируется)" maxlength="10">
+        <button onclick="addClient()">Добавить клиента</button>
+        <div class="nav-buttons">
+            <button onclick="window.location.href='workspace_page.html'">Назад</button>
+            <button onclick="window.location.href='client_list.html'">К списку клиентов</button>
+        </div>
+    </div>
+    <div class="notification" id="notification"></div>
+    <script>
+        function generateAccountNumber() {
+            return Math.floor(1000000000 + Math.random() * 9000000000);
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function addClient() {
+            let name = document.getElementById('client-name').value.trim();
+            let accountNumber = document.getElementById('account-number').value.trim();
+
+            if (!name) {
+                showNotification('Введите имя клиента!');
+                return;
+            }
+
+            if (!accountNumber) {
+                accountNumber = generateAccountNumber();
+            }
+            
+            let clients = JSON.parse(localStorage.getItem('clients')) || [];
+            clients.push({ name: name, accountNumber: accountNumber });
+            localStorage.setItem('clients', JSON.stringify(clients));
+            
+            showNotification(`Клиент добавлен! Имя: ${name}, Номер счёта: ${accountNumber}`);
+            setTimeout(() => {
+                window.location.href = 'client_list.html';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

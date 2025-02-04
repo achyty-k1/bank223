@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список депозитов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1e1e1e, #252525);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            padding-top: 50px;
+        }
+        .container {
+            width: 80%;
+            max-width: 1000px;
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            font-size: 24px;
+            color: #4caf50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .deposit-list {
+            margin-bottom: 20px;
+        }
+        .deposit-card {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .deposit-card p {
+            margin: 0;
+        }
+        .deposit-card button {
+            padding: 10px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .deposit-card button:hover {
+            background: #3d8b3f;
+        }
+        .deposit-card .delete-button {
+            background: #f44336;
+        }
+        .deposit-card .delete-button:hover {
+            background: #d32f2f;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        .back-button {
+            background: #f44336;
+            color: white;
+        }
+        .back-button:hover {
+            background: #d32f2f;
+            transform: scale(1.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            background: #555;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Список депозитов</h1>
+        <div class="buttons">
+            <button class="back-button" onclick="window.location.href='client_interaction.html'">Назад</button>
+            <button onclick="openModal()">Добавить депозит</button>
+        </div>
+        <div class="deposit-list" id="deposit-list">
+            <p>Текущих депозитов нет.</p>
+        </div>
+    </div>
+
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <h2>Добавить депозит</h2>
+            <input type="number" id="depositAmount" placeholder="Введите сумму депозита">
+            <input type="number" id="depositRate" placeholder="Введите процентную ставку">
+            <button onclick="submitDeposit()">Добавить</button>
+            <button onclick="closeModal()">Отмена</button>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('depositModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+
+        let deposits = JSON.parse(localStorage.getItem('deposits')) || [];
+
+        function submitDeposit() {
+            let amount = parseFloat(document.getElementById('depositAmount').value);
+            let rate = parseFloat(document.getElementById('depositRate').value);
+            if (isNaN(amount) || amount <= 0 || isNaN(rate) || rate <= 0) {
+                alert("Некорректные данные!");
+                return;
+            }
+            const startTime = new Date().toISOString();
+            const endTime = new Date(new Date().getTime() + 15 * 60 * 1000).toISOString();
+
+            deposits.push({
+                amount,
+                rate,
+                startTime,
+                endTime,
+                finalAmount: amount,
+                earnedInterest: 0,
+                interestCount: 0
+            });
+            localStorage.setItem('deposits', JSON.stringify(deposits));
+            closeModal();
+            renderDeposits();
+        }
+
+        function renderDeposits() {
+            const depositList = document.getElementById('deposit-list');
+            depositList.innerHTML = deposits.length === 0 ? '<p>Текущих депозитов нет.</p>' : '';
+            deposits.forEach((deposit, index) => {
+                const depositCard = document.createElement('div');
+                depositCard.classList.add('deposit-card');
+                depositCard.innerHTML = `
+                    <p><strong>Депозит №${index + 1}</strong></p>
+                    <p>Сумма: ${deposit.amount.toFixed(2)} ₽</p>
+                    <p>Процент: ${deposit.rate}%</p>
+                    <p>Итоговая сумма с процентами: <span id="final-${index}">${deposit.finalAmount.toFixed(2)} ₽</span></p>
+                    <p>Таймер: <span id="timer-${index}"></span></p>
+                    <p>Начисления процентов: ${deposit.interestCount || 0}</p>
+                    <p>Сумма начисленных процентов: ${deposit.earnedInterest || 0} ₽</p>
+                    <button onclick="withdrawInterest(${index})">Снять проценты</button>
+                    <button class="delete-button" onclick="deleteDeposit(${index})">Удалить депозит</button>
+                `;
+                depositList.appendChild(depositCard);
+                startTimer(index, deposit);
+            });
+        }
+
+        function startTimer(index, deposit) {
+            const timerElement = document.getElementById(`timer-${index}`);
+            const finalAmountElement = document.getElementById(`final-${index}`);
+
+            function updateTimer() {
+                const now = new Date().getTime();
+                const endTime = new Date(deposit.endTime).getTime();
+                const remainingTime = Math.max(0, endTime - now);
+
+                if (remainingTime <= 0) {
+                    deposit.earnedInterest = (deposit.amount * deposit.rate / 100).toFixed(2);
+                    deposit.finalAmount = parseFloat(deposit.amount) + parseFloat(deposit.earnedInterest);
+                    deposit.interestCount = (deposit.interestCount || 0) + 1;
+                    deposit.endTime = new Date(now + 15 * 60 * 1000).toISOString();
+                    localStorage.setItem('deposits', JSON.stringify(deposits));
+                    finalAmountElement.textContent = `${deposit.finalAmount.toFixed(2)} ₽`;
+                    timerElement.textContent = "15:00";
+                    setTimeout(updateTimer, 1000);
+                } else {
+                    const minutes = Math.floor(remainingTime / 60000);
+                    const seconds = Math.floor((remainingTime % 60000) / 1000);
+                    timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    setTimeout(updateTimer, 1000);
+                }
+            }
+
+            updateTimer();
+        }
+
+        function withdrawInterest(index) {
+            if (deposits[index].earnedInterest > 0) {
+                alert(`Вы сняли ${deposits[index].earnedInterest} ₽ процентов.`);
+                deposits[index].earnedInterest = 0;
+                localStorage.setItem('deposits', JSON.stringify(deposits));
+                renderDeposits();
+            } else {
+                alert("Нет накопленных процентов для снятия.");
+            }
+        }
+
+        function deleteDeposit(index) {
+            if (confirm('Вы действительно хотите удалить этот депозит?')) {
+                deposits.splice(index, 1);
+                localStorage.setItem('deposits', JSON.stringify(deposits));
+                renderDeposits();
+            }
+        }
+
+        renderDeposits();
+    </script>
+</body>
+</html>

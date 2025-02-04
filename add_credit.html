@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список кредитов</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #1e1e1e, #252525);
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            padding-top: 20px;
+        }
+        .main-container {
+            width: 80%;
+            max-width: 1000px;
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .credit-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .credit-card {
+            background: linear-gradient(135deg, #3a3a3a, #444);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .credit-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
+        }
+        .credit-card p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .credit-card button {
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .credit-card button:hover {
+            filter: brightness(1.2);
+        }
+        .back-button, .add-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .back-button {
+            background: #f44336;
+            color: white;
+        }
+        .back-button:hover {
+            background: #d32f2f;
+            transform: scale(1.05);
+        }
+        .add-button {
+            background: #4caf50;
+            color: white;
+        }
+        .add-button:hover {
+            background: #3d8b3f;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Список кредитов</h1>
+        <div id="creditList" class="credit-list"></div>
+        <button class="back-button" onclick="window.location.href='./client_interaction.html'">Назад</button>
+        <button class="add-button" onclick="addCredit()">Добавить кредит</button>
+    </div>
+
+    <script>
+        const client = JSON.parse(localStorage.getItem('currentClient')) || {credits: []};
+        let clients = JSON.parse(localStorage.getItem('clients')) || [];
+
+        function saveClientData() {
+            const updatedClients = clients.map(c =>
+                c.accountNumber === client.accountNumber ? client : c
+            );
+            localStorage.setItem('clients', JSON.stringify(updatedClients));
+            localStorage.setItem('currentClient', JSON.stringify(client));
+        }
+
+        function displayCredits() {
+            const creditListElement = document.getElementById('creditList');
+            creditListElement.innerHTML = '';
+            client.credits.forEach((credit, index) => {
+                const totalAmount = credit.amount + (credit.amount * credit.interestRate / 100);
+                const startTime = credit.startTime || Date.now();
+                const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                const remainingTime = Math.max(credit.term * 60 - elapsedTime, 0);
+                credit.startTime = startTime;
+
+                creditListElement.innerHTML += `
+                    <div class="credit-card">
+                        <p><strong>Кредит ${index + 1}</strong></p>
+                        <p>Сумма: ${credit.amount.toFixed(2)}</p>
+                        <p>Процент: ${credit.interestRate}%</p>
+                        <p>Итоговая сумма: ${totalAmount.toFixed(2)}</p>
+                        <p>Срок: ${credit.term} мин</p>
+                        <p>Просрочки: ${credit.overdue}/2</p>
+                        <p>Таймер: <span id="timer${index}">Ожидание...</span></p>
+                        <button onclick="makeEarlyPayment(${index})">Внести сумму</button>
+                        <button class="back-button" onclick="deleteCredit(${index})">Удалить</button>
+                    </div>`;
+                startTimer(index, remainingTime);
+            });
+            saveClientData();
+        }
+
+        function startTimer(index, seconds) {
+            const timerElement = document.getElementById(`timer${index}`);
+
+            const interval = setInterval(() => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerElement.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                seconds--;
+
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    alert(`Кредит ${index + 1} просрочен!`);
+                    client.credits[index].overdue++;
+                    if (client.credits[index].overdue >= 2) {
+                        timerElement.textContent = 'Остановлен';
+                    } else {
+                        client.credits[index].totalAmount += client.credits[index].amount * (client.credits[index].interestRate / 100);
+                        saveClientData();
+                        displayCredits();
+                    }
+                }
+            }, 1000);
+        }
+
+        function addCredit() {
+            const amount = parseFloat(prompt('Введите сумму кредита:'));
+            const interestRate = parseFloat(prompt('Введите процент по кредиту:'));
+            const term = parseInt(prompt('Введите срок кредита (15-30 минут):'));
+            if (isNaN(amount) || isNaN(interestRate) || isNaN(term) || term < 15 || term > 30) {
+                alert('Некорректные данные. Введите правильные значения.');
+                return;
+            }
+            const newCredit = { amount, interestRate, totalAmount: amount + (amount * interestRate / 100), term, overdue: 0, startTime: Date.now() };
+            client.credits.push(newCredit);
+            saveClientData();
+            displayCredits();
+            startTimer(client.credits.length - 1, term * 60);
+        }
+
+        function deleteCredit(index) {
+            if (confirm('Вы уверены, что хотите удалить этот кредит?')) {
+                client.credits.splice(index, 1);
+                saveClientData();
+                displayCredits();
+            }
+        }
+
+        displayCredits();
+    </script>
+</body>
+</html>
