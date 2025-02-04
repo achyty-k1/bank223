@@ -196,7 +196,7 @@
             let amount = parseFloat(document.getElementById('printer-balance-input').value);
             let commission = parseFloat(document.getElementById('commission-input').value);
             if (!amount || amount <= 0 || !commission || commission < 0) return alert('Некорректные значения!');
-            clientData.printerBalance += amount - commission;
+            clientData.printerBalance += amount - (amount * (commission / 100));
             saveClientData();
             updateUI();
         }
